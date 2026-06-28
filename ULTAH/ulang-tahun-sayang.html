@@ -174,9 +174,29 @@
     <div id="slideArea"></div>
     <div id="navHint">ketuk kiri / kanan untuk pindah slide</div>
   </div>
+
+  <audio id="bgm" loop></audio>
 </div>
 
 <script>
+/* ============================================================
+   DATA — daftar foto kamu (cuma 8 file, dipakai berulang/cycling
+   di semua slide & kolase hati). Ganti nama file di sini kalau
+   nama aslimu berbeda atau ekstensinya bukan .jpg
+   ============================================================ */
+const PHOTOS = [
+  "photos/WhatsApp Image 2026-06-29 at 05.58.36.jpeg",
+  "photos/WhatsApp Image 2026-06-29 at 06.07.11 (1).jpeg",
+  "photos/WhatsApp Image 2026-06-29 at 06.07.11 (2).jpeg",
+  "photos/WhatsApp Image 2026-06-29 at 06.07.11.jpeg",
+  "photos/WhatsApp Image 2026-06-29 at 06.07.12.jpeg",
+  "photos/WhatsApp Image 2026-06-29 at 06.07.13 (1).jpeg",
+  "photos/WhatsApp Image 2026-06-29 at 06.07.13.jpeg",
+  "photos/WhatsApp Image 2026-06-29 at 06.07.14.jpeg"
+];
+function photoAt(i){ return encodeURI(PHOTOS[i % PHOTOS.length]); }
+let photoCursor = 0; // penghitung global supaya tiap slide dapat foto berbeda berurutan
+
 /* ============================================================
    DATA — pesan personal (silakan sunting teksnya di sini)
    ============================================================ */
@@ -437,7 +457,8 @@ function renderSlide(idx){
       f.style.top = top+'%';
       f.style.transform = `rotate(${(Math.random()*16-8)}deg)`;
       f.style.animationDelay = (i*0.08)+'s';
-      f.innerHTML = '📷'; // ganti dengan <img src="photos/namafile.jpg"> milikmu
+      const src = photoAt(photoCursor++); // ambil foto berikutnya, otomatis berulang kalau sudah 8
+      f.innerHTML = `<img src="${src}" alt="" onerror="this.parentElement.innerHTML='📷'">`;
       wrap.appendChild(f);
     });
     area.appendChild(wrap);
@@ -462,7 +483,8 @@ function renderSlide(idx){
     for(let i=0;i<2;i++){
       const f = document.createElement('div');
       f.className = 'frame';
-      f.innerHTML = '<div class="camIcon">📷</div><span>Ganti dengan fotomu</span>';
+      const src = photoAt(photoCursor++);
+      f.innerHTML = `<img src="${src}" alt="" onerror="this.parentElement.innerHTML='<div class=camIcon>📷</div><span>Ganti dengan fotomu</span>'">`;
       row.appendChild(f);
     }
     area.appendChild(row);
@@ -479,25 +501,23 @@ function makeMsgCard(text){
 }
 
 /* ============================================================
-   6. MUSIC TOGGLE (placeholder tone — ganti dengan <audio> file asli)
+   6. MUSIC TOGGLE — memutar file mp3 asli
    ============================================================ */
-let audioCtx, oscillator;
+const MUSIC_FILE = "music/keshi - UNDERSTAND (Visualizer).mp3";
+const bgm = document.getElementById('bgm');
+bgm.src = encodeURI(MUSIC_FILE);
+
 document.getElementById('musicBtn').addEventListener('click', (e) => {
   e.stopPropagation();
-  if(oscillator){
-    oscillator.stop(); oscillator = null;
+  if(bgm.paused){
+    bgm.play().catch(() => {
+      alert('Tidak bisa memutar musik. Pastikan file "' + MUSIC_FILE + '" ada di folder music/ dan nama filenya persis sama.');
+    });
+    e.target.textContent = '❚❚';
+  } else {
+    bgm.pause();
     e.target.textContent = '▶';
-    playing = true;
-    return;
   }
-  audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-  oscillator = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  gain.gain.value = 0.05;
-  oscillator.frequency.value = 293.7;
-  oscillator.connect(gain).connect(audioCtx.destination);
-  oscillator.start();
-  e.target.textContent = '❚❚';
 });
 </script>
 </body>
