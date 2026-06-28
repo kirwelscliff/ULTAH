@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Selamat Ulang Tahun Sayang 🎂</title>
+<style>
+  :root{
+    --pink:#ff4fa3;
+    --pink-bright:#ffb3d1;
+    --plum-dim:#7a4a5e;
+    --card-bg:#fdfaf7;
+    --text-dark:#4a2f3a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    width:100%; height:100%; background:#000; overflow:hidden;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  #app{position:relative; width:100vw; height:100vh; background:#000;}
+
+  /* ============ GLOBAL MUSIC BUTTON ============ */
+  #musicBtn{
+    position:absolute; top:18px; right:18px; z-index:100;
+    width:46px; height:46px; border-radius:50%;
+    background: rgba(20,20,20,.7); border:1px solid rgba(255,255,255,.25);
+    color:#fff; display:flex; align-items:center; justify-content:center;
+    font-size:16px; cursor:pointer;
+    box-shadow: 0 0 16px rgba(255,79,163,.35);
+  }
+
+  /* ============ LOADER ============ */
+  #loader{
+    position:absolute; inset:0; z-index:90; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:14px; background:#000;
+    transition: opacity .6s ease, visibility .6s ease;
+  }
+  #loader.hide{opacity:0; visibility:hidden;}
+  .spinner{
+    width:46px; height:46px; border-radius:50%;
+    border:3px solid rgba(255,255,255,.15); border-top-color:#fff;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #loader p.title{font-family:'Brush Script MT', cursive, Georgia; font-size:22px; color:#fff;}
+  #loader p.sub{font-size:12.5px; color:#999; font-style:italic;}
+
+  /* ============ INTRO CANVAS (LED dot-matrix) ============ */
+  #introWrap{
+    position:absolute; inset:0; z-index:80; background:#000;
+    transition: opacity .7s ease, visibility .7s ease;
+  }
+  #introWrap.hide{opacity:0; visibility:hidden; pointer-events:none;}
+  #ledCanvas{position:absolute; inset:0;}
+  #tapContinue{
+    position:absolute; bottom:60px; left:50%; transform:translateX(-50%);
+    color:#fff; font-size:13px; letter-spacing:1px; opacity:0;
+    border:1px solid rgba(255,255,255,.4); padding:10px 24px; border-radius:999px;
+    background:rgba(255,255,255,.08); cursor:pointer;
+    transition: opacity .6s ease;
+  }
+  #tapContinue.show{opacity:1; animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%,100%{transform:translateX(-50%) scale(1);}50%{transform:translateX(-50%) scale(1.05);}}
+
+  /* ============ STORY / SLIDESHOW ============ */
+  #story{
+    position:absolute; inset:0; z-index:10; background:#000; overflow:hidden;
+    opacity:0; transition: opacity .8s ease;
+  }
+  #story.show{opacity:1;}
+  #stars{position:absolute; inset:0; z-index:0;}
+  .star{
+    position:absolute; background:#fff; border-radius:50%;
+    animation: twinkle 3s ease-in-out infinite;
+  }
+  @keyframes twinkle{0%,100%{opacity:.25;}50%{opacity:1;}}
+
+  #progressRow{
+    position:absolute; top:14px; left:14px; right:14px; z-index:30;
+    display:flex; gap:5px;
+  }
+  .segment{flex:1; height:3px; background:rgba(255,255,255,.25); border-radius:3px; overflow:hidden;}
+  .segment .fill{height:100%; width:0%; background:#fff; border-radius:3px;}
+  .segment.done .fill{width:100%;}
+
+  #slideArea{
+    position:absolute; inset:0; z-index:5;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    padding-top:64px;
+  }
+
+  .msgCard{
+    width:min(560px, 88vw);
+    background: var(--card-bg);
+    border-radius:18px; padding:22px 26px;
+    box-shadow: 0 18px 40px rgba(0,0,0,.5);
+    text-align:center; position:relative;
+    margin-bottom:26px;
+  }
+  .msgCard .deco{position:absolute; top:10px; right:14px; font-size:18px;}
+  .msgCard p{
+    font-family: Georgia, 'Times New Roman', serif; font-style:italic;
+    color: var(--text-dark); font-size:16px; line-height:1.6;
+  }
+
+  .photoRow{
+    display:flex; gap:6px; width:min(560px,88vw); justify-content:center; flex:1;
+  }
+  .frame{
+    flex:1; max-width:280px; aspect-ratio:3/4; border-radius:14px;
+    background: linear-gradient(160deg,#2a2a2a,#161616);
+    border:2px dashed rgba(255,255,255,.25);
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:6px; color:rgba(255,255,255,.45);
+    font-size:12px; overflow:hidden;
+  }
+  .frame img{width:100%; height:100%; object-fit:cover; display:block;}
+  .frame .camIcon{font-size:26px;}
+
+  /* HEART HANDS transitional frame */
+  .heartHandsWrap{
+    flex:1; display:flex; align-items:center; justify-content:center;
+  }
+  .bigHeart{font-size:90px; animation: floatHeart 1.6s ease-in-out infinite;}
+  @keyframes floatHeart{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-14px) scale(1.12);}}
+
+  /* HEART COLLAGE FINALE */
+  #heartCollage{position:relative; width:min(620px,92vw); height:62vh; flex:1;}
+  .heartFrame{
+    position:absolute; width:90px; height:120px; border-radius:10px;
+    background: linear-gradient(160deg,#2a2a2a,#161616);
+    border:2px solid rgba(255,79,163,.7);
+    box-shadow: 0 0 18px rgba(255,79,163,.55);
+    display:flex; align-items:center; justify-content:center;
+    color:rgba(255,255,255,.4); font-size:22px;
+    opacity:0; animation: popIn .5s ease forwards;
+  }
+  .heartFrame img{width:100%; height:100%; object-fit:cover; border-radius:8px;}
+  @keyframes popIn{to{opacity:1;}}
+  #finaleCaption{
+    text-align:center; color:#fff; font-family:Georgia,serif; font-style:italic;
+    font-size:17px; margin-top:14px; padding:0 20px; line-height:1.5;
+    text-shadow:0 0 12px rgba(255,79,163,.6);
+  }
+
+  #navHint{
+    position:absolute; bottom:10px; width:100%; text-align:center;
+    color:rgba(255,255,255,.35); font-size:11px; z-index:30;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <button id="musicBtn">▶</button>
+
+  <!-- LOADER -->
+  <div id="loader">
+    <div class="spinner"></div>
+    <p class="title">Mempersiapkan sesuatu yang spesial...</p>
+    <p class="sub">Hal baik butuh waktu.</p>
+  </div>
+
+  <!-- INTRO LED COUNTDOWN -->
+  <div id="introWrap">
+    <canvas id="ledCanvas"></canvas>
+    <div id="tapContinue">Ketuk untuk melanjutkan</div>
+  </div>
+
+  <!-- STORY / SLIDESHOW -->
+  <div id="story">
+    <div id="stars"></div>
+    <div id="progressRow"></div>
+    <div id="slideArea"></div>
+    <div id="navHint">ketuk kiri / kanan untuk pindah slide</div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DATA — pesan personal (silakan sunting teksnya di sini)
+   ============================================================ */
+const slides = [
+  { type:'dual', text:"Selamat Ulang Tahun Cliff punya Sayang, Cliff punya Bebi, Cliff punya orang yang paling Cliff cinta sedunia 💕" },
+  { type:'dual', text:"Sudah 21 tahun saja yah anak ini, sudah tambah dewasa 🎂" },
+  { type:'dual', text:"Walau baru 3 tahun temani sayang dan bisa ikut rayakan Ulang Tahun sayang, tapi puji Tuhan yah 🙏" },
+  { type:'dual', text:"Walau tidak ikut dalam 18 tahun umur sayang yang lalu, Cliff janji bakal selalu ada untuk sisa umur sayang kedepan, bakal selalu ada untuk dampingi dan berikan sayang hadiah yang lebih baik lagi kedepan 💍" },
+  { type:'heartHands', text:"Cliff betul betul betul minta maaf karna belum bisa kasih hadiah dalam bentuk fisik, tapi Cliff bakal usahakan hadiah yang lebih baik kedepannya" },
+  { type:'dual', text:"Karena disetiap tanggal dan bulan ini, Cliff punya manusia terbaik lahir, dan Cliff bakal usahakan yang terbaik untuk rayakan dan ingat hari ini 🎉" },
+  { type:'dual', text:"Cliff doakan semoga kedepan hal-hal baik datang menyambut usaha-usaha kerasnya sayang, dan yang paling penting semoga sayang selalu diberi kesehatan, berkat, serta umur yang panjang. Aminnnn 🙏💖" },
+  { type:'heart', text:"SELAMAT ULANG TAHUN KESAYANGAN CLIFF 🎂🥳💕" }
+];
+
+/* ============================================================
+   1. LOADER -> INTRO
+   ============================================================ */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hide');
+    startLedIntro();
+  }, 1600);
+});
+
+/* ============================================================
+   2. LED DOT-MATRIX COUNTDOWN (canvas)
+   ============================================================ */
+const ledCanvas = document.getElementById('ledCanvas');
+const lctx = ledCanvas.getContext('2d');
+const CHARSET = "HAPPYBIRTHDAY".split(''); // huruf latar diambil dari kata ini, sama seperti referensi
+
+function resizeLed(){ ledCanvas.width = innerWidth; ledCanvas.height = innerHeight; }
+resizeLed();
+window.addEventListener('resize', resizeLed);
+
+let bgGrid = [];
+function buildGrid(){
+  bgGrid = [];
+  const cell = 30;
+  for(let y=20; y<ledCanvas.height; y+=cell){
+    for(let x=20; x<ledCanvas.width; x+=cell){
+      bgGrid.push({
+        x, y,
+        ch: CHARSET[Math.floor(Math.random()*CHARSET.length)],
+        bright: Math.random()
+      });
+    }
+  }
+}
+buildGrid();
+
+function drawNoiseLayer(){
+  lctx.clearRect(0,0,ledCanvas.width,ledCanvas.height);
+  lctx.font = "16px Arial";
+  lctx.textAlign='center'; lctx.textBaseline='middle';
+  bgGrid.forEach(c => {
+    const b = c.bright;
+    lctx.fillStyle = b > 0.85 ? '#ffb3d1' : (b > 0.5 ? '#a8506f' : '#3a1f28');
+    lctx.fillText(c.ch, c.x, c.y);
+  });
+}
+
+function drawDotText(text, fontSize){
+  // render target text ke canvas offscreen lalu sample jadi titik2 dot-matrix
+  const off = document.createElement('canvas');
+  off.width = ledCanvas.width; off.height = ledCanvas.height;
+  const octx = off.getContext('2d');
+  octx.fillStyle = '#fff';
+  octx.font = `bold ${fontSize}px Arial`;
+  octx.textAlign='center'; octx.textBaseline='middle';
+  octx.fillText(text, off.width/2, off.height/2);
+  const data = octx.getImageData(0,0,off.width,off.height).data;
+
+  const spacing = 7, radius = 2.6;
+  lctx.shadowColor = '#ff4fa3'; lctx.shadowBlur = 12;
+  lctx.fillStyle = '#ff4fa3';
+  for(let y=0; y<off.height; y+=spacing){
+    for(let x=0; x<off.width; x+=spacing){
+      const alpha = data[(y*off.width + x)*4 + 3];
+      if(alpha > 120){
+        lctx.beginPath();
+        lctx.arc(x,y,radius,0,Math.PI*2);
+        lctx.fill();
+      }
+    }
+  }
+  lctx.shadowBlur = 0;
+}
+
+let flickerTimer;
+function renderLedFrame(text, fontSize){
+  drawNoiseLayer();
+  drawDotText(text, fontSize);
+}
+
+function startFlicker(){
+  clearInterval(flickerTimer);
+  flickerTimer = setInterval(() => {
+    for(let i=0;i<8;i++){
+      const idx = Math.floor(Math.random()*bgGrid.length);
+      bgGrid[idx].ch = CHARSET[Math.floor(Math.random()*CHARSET.length)];
+      bgGrid[idx].bright = Math.random();
+    }
+  }, 260);
+}
+
+function startLedIntro(){
+  buildGrid();
+  startFlicker();
+  const seq = [
+    { text:"3", size:220, dur:800 },
+    { text:"2", size:220, dur:800 },
+    { text:"1", size:220, dur:800 },
+    { text:"HAPPY", size:90, dur:1400 },
+    { text:"BIRTHDAY", size:80, dur:1600 },
+  ];
+  let i = 0;
+  function step(){
+    if(i >= seq.length){
+      clearInterval(flickerTimer);
+      document.getElementById('tapContinue').classList.add('show');
+      return;
+    }
+    renderLedFrame(seq[i].text, seq[i].size);
+    setTimeout(() => { i++; step(); }, seq[i].dur);
+  }
+  // re-render setiap flicker tick supaya angka/teks tetap kebentuk di atas noise
+  let activeIdx = 0;
+  const liveRender = setInterval(() => {
+    if(activeIdx < seq.length) renderLedFrame(seq[activeIdx].text, seq[activeIdx].size);
+  }, 260);
+  let t = 0;
+  seq.forEach((s, idx) => {
+    setTimeout(() => { activeIdx = idx; }, t);
+    t += s.dur;
+  });
+  setTimeout(() => {
+    clearInterval(liveRender); clearInterval(flickerTimer);
+    document.getElementById('tapContinue').classList.add('show');
+  }, t);
+}
+
+document.getElementById('tapContinue').addEventListener('click', () => {
+  document.getElementById('introWrap').classList.add('hide');
+  document.getElementById('story').classList.add('show');
+  buildStars();
+  buildProgressBar();
+  renderSlide(0);
+});
+
+/* ============================================================
+   3. STARFIELD
+   ============================================================ */
+function buildStars(){
+  const container = document.getElementById('stars');
+  container.innerHTML = '';
+  for(let i=0;i<90;i++){
+    const s = document.createElement('div');
+    s.className='star';
+    const size = Math.random()*2 + 1;
+    s.style.width = size+'px'; s.style.height=size+'px';
+    s.style.left = Math.random()*100+'%';
+    s.style.top = Math.random()*100+'%';
+    s.style.animationDelay = (Math.random()*3)+'s';
+    container.appendChild(s);
+  }
+}
+
+/* ============================================================
+   4. PROGRESS BAR (gaya Instagram Story)
+   ============================================================ */
+let currentIndex = 0, playing = true, slideTimer, progressInterval;
+const SLIDE_DURATION = 5000;
+
+function buildProgressBar(){
+  const row = document.getElementById('progressRow');
+  row.innerHTML = '';
+  slides.forEach(() => {
+    const seg = document.createElement('div');
+    seg.className='segment';
+    seg.innerHTML = '<div class="fill"></div>';
+    row.appendChild(seg);
+  });
+}
+
+function setProgress(idx, pct){
+  const segs = document.querySelectorAll('.segment');
+  segs.forEach((s,i) => {
+    const fill = s.querySelector('.fill');
+    if(i < idx){ fill.style.width='100%'; }
+    else if(i === idx){ fill.style.width = pct+'%'; }
+    else { fill.style.width='0%'; }
+  });
+}
+
+function startTimer(){
+  clearInterval(progressInterval);
+  let elapsed = 0;
+  progressInterval = setInterval(() => {
+    if(!playing) return;
+    elapsed += 50;
+    setProgress(currentIndex, Math.min(100,(elapsed/SLIDE_DURATION)*100));
+    if(elapsed >= SLIDE_DURATION){
+      elapsed = 0;
+      goNext();
+    }
+  }, 50);
+}
+
+function goNext(){
+  if(currentIndex < slides.length-1){ currentIndex++; renderSlide(currentIndex); }
+  else { currentIndex = 0; renderSlide(currentIndex); } // ulang dari awal
+}
+function goPrev(){
+  if(currentIndex > 0){ currentIndex--; renderSlide(currentIndex); }
+}
+
+document.getElementById('story').addEventListener('click', (e) => {
+  if(e.target.id === 'musicBtn') return;
+  const x = e.clientX;
+  if(x < innerWidth*0.35) goPrev();
+  else goNext();
+});
+
+/* ============================================================
+   5. RENDER SLIDE
+   ============================================================ */
+function heartPoints(n){
+  const pts = [];
+  for(let i=0;i<n;i++){
+    const t = (i/n)*Math.PI*2;
+    const x = 16*Math.pow(Math.sin(t),3);
+    const y = -(13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t));
+    pts.push({x,y});
+  }
+  return pts;
+}
+
+function renderSlide(idx){
+  const slide = slides[idx];
+  const area = document.getElementById('slideArea');
+  area.innerHTML = '';
+  setProgress(idx, 0);
+
+  if(slide.type === 'heart'){
+    area.style.justifyContent = 'flex-start';
+    const wrap = document.createElement('div');
+    wrap.id = 'heartCollage';
+    const pts = heartPoints(15);
+    const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
+    const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
+    pts.forEach((p, i) => {
+      const left = ((p.x - minX)/(maxX-minX))*78 + 8;
+      const top = ((p.y - minY)/(maxY-minY))*78 + 4;
+      const f = document.createElement('div');
+      f.className = 'heartFrame';
+      f.style.left = left+'%';
+      f.style.top = top+'%';
+      f.style.transform = `rotate(${(Math.random()*16-8)}deg)`;
+      f.style.animationDelay = (i*0.08)+'s';
+      f.innerHTML = '📷'; // ganti dengan <img src="photos/namafile.jpg"> milikmu
+      wrap.appendChild(f);
+    });
+    area.appendChild(wrap);
+    const cap = document.createElement('div');
+    cap.id = 'finaleCaption';
+    cap.textContent = slide.text;
+    area.appendChild(cap);
+
+  } else if(slide.type === 'heartHands'){
+    const card = makeMsgCard(slide.text);
+    area.appendChild(card);
+    const wrap = document.createElement('div');
+    wrap.className = 'heartHandsWrap';
+    wrap.innerHTML = '<div class="bigHeart">🤲❤️</div>';
+    area.appendChild(wrap);
+
+  } else { // dual
+    const card = makeMsgCard(slide.text);
+    area.appendChild(card);
+    const row = document.createElement('div');
+    row.className = 'photoRow';
+    for(let i=0;i<2;i++){
+      const f = document.createElement('div');
+      f.className = 'frame';
+      f.innerHTML = '<div class="camIcon">📷</div><span>Ganti dengan fotomu</span>';
+      row.appendChild(f);
+    }
+    area.appendChild(row);
+  }
+
+  startTimer();
+}
+
+function makeMsgCard(text){
+  const card = document.createElement('div');
+  card.className = 'msgCard';
+  card.innerHTML = `<div class="deco">💕</div><p>${text}</p>`;
+  return card;
+}
+
+/* ============================================================
+   6. MUSIC TOGGLE (placeholder tone — ganti dengan <audio> file asli)
+   ============================================================ */
+let audioCtx, oscillator;
+document.getElementById('musicBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if(oscillator){
+    oscillator.stop(); oscillator = null;
+    e.target.textContent = '▶';
+    playing = true;
+    return;
+  }
+  audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+  oscillator = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.05;
+  oscillator.frequency.value = 293.7;
+  oscillator.connect(gain).connect(audioCtx.destination);
+  oscillator.start();
+  e.target.textContent = '❚❚';
+});
+</script>
+</body>
+</html>
